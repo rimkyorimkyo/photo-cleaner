@@ -1,4 +1,4 @@
-const CACHE_NAME = 'photo-cleaner-v1';
+const CACHE_NAME = 'photo-cleaner-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -12,12 +12,12 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -36,14 +36,22 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Let network handle external or blob requests
-  if (event.request.url.startsWith('blob:') || event.request.url.startsWith('data:')) {
+  if (event.request.url.startsWith('blob:') || event.request.url.startsWith('data:') || event.request.method !== 'GET') {
     return;
   }
 
+  // Network first for HTML/JS, fallback to cache
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

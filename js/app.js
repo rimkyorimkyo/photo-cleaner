@@ -242,24 +242,46 @@ class PhotoCleanerApp {
     };
     scrollContainer.appendChild(allTab);
 
-    // 2. Add Folder Button (Prominently placed at the front!)
+    // 2. Add Folder Button (Always at front)
     const addTab = document.createElement('div');
     addTab.className = 'folder-tab folder-tab-add';
-    addTab.innerHTML = `${ICONS.plus} 새 폴더 만들기`;
+    addTab.innerHTML = `➕ 새 폴더 만들기`;
     addTab.onclick = () => this.openCreateFolderSheet();
     scrollContainer.appendChild(addTab);
 
-    // 3. User Folders
+    // 3. User Folders with Direct ✕ Delete Button
     this.folders.forEach(folder => {
       const folderPhotos = allPhotos.filter(p => p.folderId === folder.id);
       const tab = document.createElement('div');
       tab.className = `folder-tab ${this.activeFolderId === folder.id ? 'active' : ''}`;
-      tab.innerHTML = `${folder.icon || '📁'} ${folder.name} <span class="count">${folderPhotos.length}</span>`;
-      tab.onclick = () => {
+      tab.innerHTML = `
+        <span>${folder.icon || '📁'} ${folder.name}</span>
+        <span class="count">${folderPhotos.length}</span>
+        <span class="folder-tab-delete" title="폴더 삭제" data-id="${folder.id}">✕</span>
+      `;
+
+      // Click tab to view
+      tab.onclick = (e) => {
+        // If clicked on delete button, do not switch
+        if (e.target.classList.contains('folder-tab-delete')) return;
         this.activeFolderId = folder.id;
         this.renderFolderTabs();
         this.renderPhotosGrid();
       };
+
+      // Click delete button to delete directly
+      const delBtn = tab.querySelector('.folder-tab-delete');
+      delBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (confirm(`'${folder.name}' 폴더를 삭제하시겠습니까?\n(폴더 안의 사진은 삭제되지 않고 안전하게 유지됩니다)`)) {
+          await deleteFolder(folder.id);
+          if (this.activeFolderId === folder.id) this.activeFolderId = '';
+          await this.refreshData();
+          showToast(`'${folder.name}' 폴더가 삭제되었습니다.`, 'info');
+          this.render();
+        }
+      };
+
       scrollContainer.appendChild(tab);
     });
 
@@ -274,6 +296,23 @@ class PhotoCleanerApp {
         this.renderPhotosGrid();
       };
       scrollContainer.appendChild(unorgTab);
+
+      // 5. Clear All Folders Button
+      const clearAllTab = document.createElement('div');
+      clearAllTab.className = 'folder-tab folder-tab-clear-all';
+      clearAllTab.innerHTML = `🗑️ 모든 폴더 비우기`;
+      clearAllTab.onclick = async () => {
+        if (confirm('현재 있는 모든 폴더를 비우시겠습니까?\n(사진은 삭제되지 않고 전부 미분류로 남습니다)')) {
+          for (const f of this.folders) {
+            await deleteFolder(f.id);
+          }
+          this.activeFolderId = '';
+          await this.refreshData();
+          showToast('모든 폴더가 삭제되었습니다.', 'info');
+          this.render();
+        }
+      };
+      scrollContainer.appendChild(clearAllTab);
     }
   }
 

@@ -403,10 +403,42 @@ body {
   background: rgba(255, 255, 255, 0.15);
 }
 
+.folder-tab-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  margin-left: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.folder-tab-delete:hover, .folder-tab-delete:active {
+  background: #ef4444;
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
 .folder-tab-add {
   border-style: dashed;
-  color: var(--accent-primary);
-  border-color: rgba(99, 102, 241, 0.4);
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.5);
+  font-weight: 700;
+}
+
+.folder-tab-clear-all {
+  border-style: dashed;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* Grid & View Settings Bar */
