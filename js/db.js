@@ -36,6 +36,20 @@ export async function openDB() {
 
     request.onsuccess = async (event) => {
       dbInstance = event.target.result;
+
+      // 이전 기본 더미 폴더들이 남아있다면 완전히 제거
+      try {
+        const dummyIds = ['trip', 'food', 'screenshot', 'document', 'people', 'daily'];
+        const existingFolders = await getAllFolders();
+        for (const f of existingFolders) {
+          if (dummyIds.includes(f.id)) {
+            await deleteFolder(f.id);
+          }
+        }
+      } catch (e) {
+        console.warn('Folder cleanup error:', e);
+      }
+
       resolve(dbInstance);
     };
 

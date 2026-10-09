@@ -115,7 +115,7 @@ export async function generateSamplePhotos() {
       thumbnail: thumbBlob,
       width: origWidth,
       height: origHeight,
-      folderId: 'trip',
+      folderId: '',
       isTrash: false,
       dhash,
       createdAt: Date.now() - (1000 * 60 * 60 * 24 * 2)
@@ -169,7 +169,7 @@ export async function generateSamplePhotos() {
       thumbnail: thumbBlob,
       width: origWidth,
       height: origHeight,
-      folderId: 'food',
+      folderId: '',
       isTrash: false,
       dhash,
       createdAt: Date.now() - (1000 * 60 * 60 * 24 * 3)
