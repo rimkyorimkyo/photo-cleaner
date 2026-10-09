@@ -242,16 +242,12 @@ class PhotoCleanerApp {
     };
     scrollContainer.appendChild(allTab);
 
-    // 2. Unorganized Tab
-    const unorgTab = document.createElement('div');
-    unorgTab.className = `folder-tab ${this.activeFolderId === '__unorganized__' ? 'active' : ''}`;
-    unorgTab.innerHTML = `미분류 <span class="count">${unorganizedPhotos.length}</span>`;
-    unorgTab.onclick = () => {
-      this.activeFolderId = '__unorganized__';
-      this.renderFolderTabs();
-      this.renderPhotosGrid();
-    };
-    scrollContainer.appendChild(unorgTab);
+    // 2. Add Folder Button (Prominently placed at the front!)
+    const addTab = document.createElement('div');
+    addTab.className = 'folder-tab folder-tab-add';
+    addTab.innerHTML = `${ICONS.plus} 새 폴더 만들기`;
+    addTab.onclick = () => this.openCreateFolderSheet();
+    scrollContainer.appendChild(addTab);
 
     // 3. User Folders
     this.folders.forEach(folder => {
@@ -267,12 +263,18 @@ class PhotoCleanerApp {
       scrollContainer.appendChild(tab);
     });
 
-    // 4. Add Folder Button
-    const addTab = document.createElement('div');
-    addTab.className = 'folder-tab folder-tab-add';
-    addTab.innerHTML = `${ICONS.plus} 새 폴더`;
-    addTab.onclick = () => this.openCreateFolderSheet();
-    scrollContainer.appendChild(addTab);
+    // 4. Unorganized Tab
+    if (this.folders.length > 0) {
+      const unorgTab = document.createElement('div');
+      unorgTab.className = `folder-tab ${this.activeFolderId === '__unorganized__' ? 'active' : ''}`;
+      unorgTab.innerHTML = `미분류 <span class="count">${unorganizedPhotos.length}</span>`;
+      unorgTab.onclick = () => {
+        this.activeFolderId = '__unorganized__';
+        this.renderFolderTabs();
+        this.renderPhotosGrid();
+      };
+      scrollContainer.appendChild(unorgTab);
+    }
   }
 
   renderPhotosGrid() {
@@ -420,37 +422,55 @@ class PhotoCleanerApp {
     let html = `
       <div style="padding: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h2 style="font-size: 1.2rem; font-weight: 700;">📂 폴더 및 앨범 관리</h2>
+          <div>
+            <h2 style="font-size: 1.2rem; font-weight: 700;">📂 내 폴더 목록</h2>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">내가 직접 만든 ${this.folders.length}개의 폴더</div>
+          </div>
           <button class="btn btn-primary" id="btnAddNewFolderInView">
             ${ICONS.plus} 새 폴더 추가
           </button>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;">
     `;
 
-    this.folders.forEach(folder => {
-      const folderPhotos = allPhotos.filter(p => p.folderId === folder.id);
-      const totalSize = folderPhotos.reduce((acc, cur) => acc + cur.size, 0);
-
+    if (this.folders.length === 0) {
       html += `
-        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-          <div>
-            <div style="font-size: 2rem; margin-bottom: 6px;">${folder.icon}</div>
-            <div style="font-weight: 700; font-size: 1rem; color: #fff;">${folder.name}</div>
-            <div style="font-size: 0.8rem; color: var(--text-secondary);">${folderPhotos.length}장 (${formatBytes(totalSize)})</div>
-          </div>
-          <div style="display: flex; gap: 6px; margin-top: 8px;">
-            <button class="btn btn-secondary" style="flex: 1; padding: 6px;" onclick="window.app.viewFolderPhotos('${folder.id}')">보기</button>
-            <button class="btn btn-danger btn-icon" style="width: 32px; height: 32px;" onclick="window.app.deleteFolderConfirm('${folder.id}')">${ICONS.trash}</button>
-          </div>
+        <div class="empty-gallery">
+          <div class="empty-icon-wrap">${ICONS.folders}</div>
+          <h3>아직 생성된 폴더가 없습니다</h3>
+          <p>원하는 테마나 이름(예: 제주여행, 맛집, 반려동물 등)으로 나만의 첫 폴더를 직접 만들어보세요!</p>
+          <button class="btn btn-primary" onclick="window.app.openCreateFolderSheet()">
+            ${ICONS.plus} 첫 폴더 만들기
+          </button>
         </div>
       `;
-    });
+    } else {
+      html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;">`;
+      this.folders.forEach(folder => {
+        const folderPhotos = allPhotos.filter(p => p.folderId === folder.id);
+        const totalSize = folderPhotos.reduce((acc, cur) => acc + cur.size, 0);
 
-    html += `</div></div>`;
+        html += `
+          <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+            <div>
+              <div style="font-size: 2rem; margin-bottom: 6px;">${folder.icon}</div>
+              <div style="font-weight: 700; font-size: 1rem; color: #fff;">${folder.name}</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary);">${folderPhotos.length}장 (${formatBytes(totalSize)})</div>
+            </div>
+            <div style="display: flex; gap: 6px; margin-top: 8px;">
+              <button class="btn btn-secondary" style="flex: 1; padding: 6px;" onclick="window.app.viewFolderPhotos('${folder.id}')">보기</button>
+              <button class="btn btn-danger btn-icon" style="width: 32px; height: 32px;" onclick="window.app.deleteFolderConfirm('${folder.id}')">${ICONS.trash}</button>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
     container.innerHTML = html;
 
-    document.getElementById('btnAddNewFolderInView').addEventListener('click', () => this.openCreateFolderSheet());
+    const addBtn = document.getElementById('btnAddNewFolderInView');
+    if (addBtn) addBtn.addEventListener('click', () => this.openCreateFolderSheet());
   }
 
   viewFolderPhotos(folderId) {
@@ -468,10 +488,10 @@ class PhotoCleanerApp {
     }
   }
 
-  openCreateFolderSheet() {
-    const emojis = ['🏖️', '🍜', '📱', '📄', '👥', '🌿', '🐶', '💼', '🚗', '⛺', '🎉', '🎨'];
+  openCreateFolderSheet(onFolderCreated = null) {
+    const emojis = ['📁', '🏖️', '🍜', '📱', '📄', '👥', '🌿', '🐶', '💼', '🚗', '⛺', '🎉', '🎨', '⭐', '❤️', '💡', '🎵', '✈️'];
     let emojiHtml = emojis.map((e, idx) => `
-      <button type="button" class="btn btn-secondary emoji-select-btn ${idx === 0 ? 'active' : ''}" data-emoji="${e}" style="font-size: 1.4rem; padding: 6px;">
+      <button type="button" class="btn btn-secondary emoji-select-btn ${idx === 0 ? 'active' : ''}" data-emoji="${e}" style="font-size: 1.3rem; padding: 6px;">
         ${e}
       </button>
     `).join('');
@@ -480,7 +500,7 @@ class PhotoCleanerApp {
       <form id="createFolderForm" style="display: flex; flex-direction: column; gap: 14px;">
         <div>
           <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 6px;">폴더 이름</label>
-          <input type="text" id="newFolderNameInput" placeholder="예: 제주도 여행, 고양이, 계약서 등" required
+          <input type="text" id="newFolderNameInput" placeholder="예: 우리집 강아지, 일본여행, 영수증 등" required
             style="width: 100%; padding: 12px; border-radius: var(--radius-md); background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); color: #fff; font-size: 0.95rem; outline: none;" />
         </div>
         <div>
@@ -497,7 +517,7 @@ class PhotoCleanerApp {
 
     openSheet('새 폴더 생성', content);
 
-    let selectedEmoji = '🏖️';
+    let selectedEmoji = '📁';
     document.querySelectorAll('.emoji-select-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.emoji-select-btn').forEach(b => b.classList.remove('active'));
@@ -523,7 +543,12 @@ class PhotoCleanerApp {
       await this.refreshData();
       closeSheet();
       showToast(`'${name}' 폴더가 생성되었습니다.`, 'success');
-      this.render();
+
+      if (onFolderCreated) {
+        await onFolderCreated(newFolder.id);
+      } else {
+        this.render();
+      }
     });
   }
 
@@ -532,6 +557,13 @@ class PhotoCleanerApp {
     if (this.selectedPhotoIds.size === 0) return;
 
     let foldersHtml = `
+      <div class="folder-pick-item" id="btnPickCreateNewFolder" style="border: 1px dashed var(--accent-primary); background: rgba(99, 102, 241, 0.1);">
+        <div class="folder-icon" style="color: var(--accent-primary);">➕</div>
+        <div class="folder-info">
+          <div class="folder-name" style="color: #c7d2fe;">새 폴더 만들어 바로 이동</div>
+          <div class="folder-subtext">원하는 이름으로 새 폴더 생성</div>
+        </div>
+      </div>
       <div class="folder-pick-item" data-folder-id="">
         <div class="folder-icon">📂</div>
         <div class="folder-info">
@@ -554,7 +586,7 @@ class PhotoCleanerApp {
     });
 
     const content = `
-      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 10px;">
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px;">
         선택한 <strong>${this.selectedPhotoIds.size}장</strong>의 사진을 보낼 폴더를 선택하세요:
       </p>
       <div class="folder-picker-grid">
@@ -564,7 +596,20 @@ class PhotoCleanerApp {
 
     openSheet('폴더로 사진 이동', content);
 
-    document.querySelectorAll('.folder-pick-item').forEach(item => {
+    // Create New Folder & Move Immediately
+    document.getElementById('btnPickCreateNewFolder').addEventListener('click', () => {
+      closeSheet();
+      this.openCreateFolderSheet(async (createdFolderId) => {
+        await batchMovePhotos(Array.from(this.selectedPhotoIds), createdFolderId);
+        await this.refreshData();
+        showToast(`${this.selectedPhotoIds.size}장의 사진을 새 폴더로 이동했습니다!`, 'success');
+        this.selectedPhotoIds.clear();
+        this.updateFabState();
+        this.render();
+      });
+    });
+
+    document.querySelectorAll('.folder-pick-item[data-folder-id]').forEach(item => {
       item.addEventListener('click', async () => {
         const targetId = item.dataset.folderId;
         await batchMovePhotos(Array.from(this.selectedPhotoIds), targetId);

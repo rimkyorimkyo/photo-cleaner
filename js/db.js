@@ -8,14 +8,7 @@ const DB_VERSION = 1;
 
 let dbInstance = null;
 
-export const DEFAULT_FOLDERS = [
-  { id: 'trip', name: '여행', icon: '🏖️', color: '#38bdf8' },
-  { id: 'food', name: '맛집/카페', icon: '🍜', color: '#f59e0b' },
-  { id: 'screenshot', name: '스크린샷', icon: '📱', color: '#a855f7' },
-  { id: 'document', name: '영수증/문서', icon: '📄', color: '#10b981' },
-  { id: 'people', name: '인물/셀카', icon: '👥', color: '#ec4899' },
-  { id: 'daily', name: '일상/기타', icon: '🌿', color: '#6366f1' },
-];
+export const DEFAULT_FOLDERS = [];
 
 export async function openDB() {
   if (dbInstance) return dbInstance;
@@ -43,18 +36,6 @@ export async function openDB() {
 
     request.onsuccess = async (event) => {
       dbInstance = event.target.result;
-
-      // Initialize default folders if empty
-      const folders = await getAllFolders();
-      if (folders.length === 0) {
-        for (const folder of DEFAULT_FOLDERS) {
-          await addFolder({
-            ...folder,
-            createdAt: Date.now()
-          });
-        }
-      }
-
       resolve(dbInstance);
     };
 
